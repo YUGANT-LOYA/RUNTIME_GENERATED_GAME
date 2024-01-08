@@ -436,10 +436,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa0774d572bce0d41a3b0cebd9b6dc50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mazeCellId: {x: 0, y: 0}
   leftWall: {fileID: 1543907734868565065}
   rightWall: {fileID: 1543907736230913056}
   frontWall: {fileID: 1543907736114233737}
   backWall: {fileID: 1543907735735347916}
+  topLeftWall: {fileID: 0}
+  topRightWall: {fileID: 0}
+  bottomLeftWall: {fileID: 0}
+  bottomRightWall: {fileID: 0}
   unVisitedCell: {fileID: 1543907736258018292}
 --- !u!1 &1543907736230913056
 GameObject:

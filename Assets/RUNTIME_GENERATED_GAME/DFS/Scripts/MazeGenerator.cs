@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,16 +9,60 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
 {
     public class MazeGenerator : MonoBehaviour
     {
+        public enum MazeShape
+        {
+            Square,
+            Octagon
+        }
+
+        [Serializable]
+        public struct ShapeStruct
+        {
+            public MazeShape shape;
+            public MazeCell shapeScript;
+            public GameObject shapeObj;
+        }
+
+        public event Action OnCompleteMazeEvent, OnGridCreationComplete;
+
+        public List<ShapeStruct> shapeStructList;
         [SerializeField] private Transform mazeCellContainer;
-        [SerializeField] private MazeCell mazeCellPrefab;
-        [SerializeField] private float timeToFindNextCell = 0.02f;
+        [SerializeField] private MazeShape currMazeShape;
+        [SerializeField] private float camYOffset = 3f, timeToFindNextCell = 0.02f;
         [SerializeField] private int mazeWidth = 25, mazeDepth = 25;
+        public bool shouldStartRandomly = true;
         [SerializeField] Vector2Int startingMazeCell = Vector2Int.zero;
         private MazeCell[,] _mazeGrid;
+
+        private void OnEnable()
+        {
+            OnCompleteMazeEvent += MazeCompleted;
+            OnGridCreationComplete += GridCreationCompleted;
+        }
+
+        private void OnDisable()
+        {
+            OnCompleteMazeEvent -= MazeCompleted;
+            OnGridCreationComplete -= GridCreationCompleted;
+        }
 
         private void Start()
         {
             StartCoroutine(StartGeneratingMaze());
+        }
+
+        //Access the main Prefab
+        public MazeCell GetShapeScriptFromMazeShape(MazeShape shapeEnum)
+        {
+            foreach (ShapeStruct shapeStruct in shapeStructList)
+            {
+                if (shapeStruct.shape == shapeEnum)
+                {
+                    return shapeStruct.shapeScript;
+                }
+            }
+
+            return null;
         }
 
         [Button]
@@ -43,13 +88,32 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
         IEnumerator StartGeneratingMaze()
         {
             _mazeGrid = new MazeCell[mazeWidth, mazeDepth];
+
             CreateGrid();
+
+            OnGridCreationComplete?.Invoke();
 
             MazeCell prevCell = null;
 
-            if (startingMazeCell.x - 1 > 0)
+            if (!shouldStartRandomly)
             {
-                prevCell = _mazeGrid[startingMazeCell.x - 1, startingMazeCell.y];
+                if (startingMazeCell.x - 1 >= 0 && startingMazeCell.x >= 0 && startingMazeCell.x < mazeWidth &&
+                    startingMazeCell.y >= 0 && startingMazeCell.y < mazeDepth)
+                {
+                    prevCell = _mazeGrid[startingMazeCell.x - 1, startingMazeCell.y];
+                }
+            }
+            else
+            {
+                int randomX = UnityEngine.Random.Range(0, mazeWidth);
+                int randomY = UnityEngine.Random.Range(0, mazeDepth);
+
+                startingMazeCell = new Vector2Int(randomX, randomY);
+                
+                if (startingMazeCell.x - 1 >= 0)
+                {
+                    prevCell = _mazeGrid[startingMazeCell.x - 1, startingMazeCell.y];
+                }
             }
 
             yield return GenerateMaze(prevCell, _mazeGrid[startingMazeCell.x, startingMazeCell.y]);
@@ -57,11 +121,15 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
 
         private void CreateGrid()
         {
+            MazeCell currMazeScript = GetShapeScriptFromMazeShape(currMazeShape);
+
             for (int x = 0; x < mazeWidth; x++)
             {
                 for (int z = 0; z < mazeDepth; z++)
                 {
-                    _mazeGrid[x, z] = Instantiate(mazeCellPrefab, new Vector3(x, 0, z), Quaternion.identity,
+                    Vector3 localScale = currMazeScript.transform.localScale;
+                    _mazeGrid[x, z] = Instantiate(currMazeScript, new Vector3(localScale.x * x, 0, localScale.z * z),
+                        Quaternion.identity,
                         mazeCellContainer);
                     _mazeGrid[x, z].mazeCellId = new Vector2Int(x, z);
                 }
@@ -87,6 +155,10 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
                     yield return GenerateMaze(currCell, nextCell);
                 }
             } while (nextCell != null);
+
+
+            //Calls When The Whole Maze is Ready
+            OnCompleteMazeEvent?.Invoke();
         }
 
         void ClearWalls(MazeCell prevCell, MazeCell currCell)
@@ -125,13 +197,21 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
                 currCell.ClearBackWall();
                 return;
             }
+
+            //Moving From TopLeft to TopRight
+            // if (prevCell.mazeCellId.y < currCell.mazeCellId.y)
+            // {
+            //     prevCell.ClearFrontWall();
+            //     currCell.ClearBackWall();
+            //     return;
+            // }
         }
 
         MazeCell GetNextUnVisitedMazeCell(MazeCell currCell)
         {
             IEnumerable<MazeCell> unvisitedCellList = GetUnvisitedCell(currCell);
 
-            return unvisitedCellList.OrderBy(c => Random.Range(1, 10)).FirstOrDefault();
+            return unvisitedCellList.OrderBy(c => UnityEngine.Random.Range(1, 10)).FirstOrDefault();
         }
 
         IEnumerable<MazeCell> GetUnvisitedCell(MazeCell currCell)
@@ -182,6 +262,26 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
                     yield return backCell;
                 }
             }
+        }
+
+        void GridCreationCompleted()
+        {
+            Vector3 camPos = Vector3.zero;
+
+            foreach (Transform trans in mazeCellContainer)
+            {
+                camPos += trans.position;
+            }
+
+            int max = mazeDepth > mazeWidth ? mazeDepth : mazeWidth;
+
+            var childCount = mazeCellContainer.childCount;
+            Camera.main.transform.position =
+                new Vector3(camPos.x / childCount, max + camYOffset, camPos.z / childCount);
+        }
+
+        void MazeCompleted()
+        {
         }
     }
 }

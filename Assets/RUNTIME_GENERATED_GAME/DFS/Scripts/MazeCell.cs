@@ -5,7 +5,17 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
     public class MazeCell : MonoBehaviour
     {
         public Vector2Int mazeCellId;
-        [SerializeField] private GameObject leftWall, rightWall, frontWall, backWall, unVisitedCell;
+
+        [SerializeField] private GameObject leftWall,
+            rightWall,
+            frontWall,
+            backWall,
+            topLeftWall,
+            topRightWall,
+            bottomLeftWall,
+            bottomRightWall,
+            unVisitedCell;
+
         public bool IsVisited { get; private set; }
 
 
@@ -33,6 +43,26 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
         public void ClearBackWall()
         {
             backWall.SetActive(false);
+        }
+
+        public void ClearTopLeftWall()
+        {
+            topLeftWall.SetActive(false);
+        }
+
+        public void ClearTopRightWall()
+        {
+            topRightWall.SetActive(false);
+        }
+
+        public void ClearBottomLeftWall()
+        {
+            bottomLeftWall.SetActive(false);
+        }
+
+        public void ClearBottomRightWall()
+        {
+            bottomRightWall.SetActive(false);
         }
     }
 }

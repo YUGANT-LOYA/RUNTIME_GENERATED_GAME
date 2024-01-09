@@ -28,9 +28,10 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
         public List<ShapeStruct> shapeStructList;
         [SerializeField] private Transform mazeCellContainer;
         [SerializeField] private MazeShape currMazeShape;
-        [SerializeField] private float camYOffset = 3f, timeToFindNextCell = 0.02f;
+        [SerializeField] private float camYOffset = 2f, timeToFindNextCell = 0.02f;
         [SerializeField] private int mazeWidth = 25, mazeDepth = 25;
         public bool shouldStartRandomly = true;
+        [HideIf("shouldStartRandomly")]
         [SerializeField] Vector2Int startingMazeCell = Vector2Int.zero;
         private MazeCell[,] _mazeGrid;
 
@@ -277,7 +278,7 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
 
             var childCount = mazeCellContainer.childCount;
             Camera.main.transform.position =
-                new Vector3(camPos.x / childCount, max + camYOffset, camPos.z / childCount);
+                new Vector3(camPos.x / childCount, max * 2 + camYOffset, camPos.z / childCount);
         }
 
         void MazeCompleted()

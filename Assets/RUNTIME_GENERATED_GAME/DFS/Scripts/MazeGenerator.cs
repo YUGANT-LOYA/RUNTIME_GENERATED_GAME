@@ -11,8 +11,7 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
     {
         public enum MazeShape
         {
-            Square,
-            Octagon
+            Square
         }
 
         [Serializable]
@@ -23,8 +22,7 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
             public GameObject shapeObj;
         }
 
-        public event Action OnCompleteMazeEvent, OnGridCreationComplete;
-
+        public bool isMazeCompleted;
         public List<ShapeStruct> shapeStructList;
         [SerializeField] private Transform mazeCellContainer;
         [SerializeField] private MazeShape currMazeShape;
@@ -34,26 +32,46 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
         [HideIf("shouldStartRandomly")]
         [SerializeField] Vector2Int startingMazeCell = Vector2Int.zero;
         private MazeCell[,] _mazeGrid;
+        public List<MazeCell> totalMazeCellList;
 
         private void OnEnable()
         {
-            OnCompleteMazeEvent += MazeCompleted;
-            OnGridCreationComplete += GridCreationCompleted;
+            GameEventHandler.OnGridCreationCompleteEvent += GridCreationCompleted;
+            GameEventHandler.OnMazeCreationStartEvent += MazeCreationStarted;
+            GameEventHandler.OnMazeCreationCompleteEvent += MazeCreationCompleted;
         }
+
 
         private void OnDisable()
         {
-            OnCompleteMazeEvent -= MazeCompleted;
-            OnGridCreationComplete -= GridCreationCompleted;
+            GameEventHandler.OnGridCreationCompleteEvent -= GridCreationCompleted;
+            GameEventHandler.OnMazeCreationStartEvent -= MazeCreationStarted;
+            GameEventHandler.OnMazeCreationCompleteEvent-= MazeCreationCompleted;
         }
 
         private void Start()
         {
+            totalMazeCellList = new List<MazeCell>();
             StartCoroutine(StartGeneratingMaze());
         }
 
+        private void MazeCreationStarted()
+        {
+            isMazeCompleted = false;
+        }
+        
+        public Transform GetMazeCellContainer()
+        {
+            return mazeCellContainer;
+        }
+        
+        public List<MazeCell> GetMazeCellList()
+        {
+            return new List<MazeCell>(totalMazeCellList);
+        }
+        
         //Access the main Prefab
-        public MazeCell GetShapeScriptFromMazeShape(MazeShape shapeEnum)
+        private MazeCell GetShapeScriptFromMazeShape(MazeShape shapeEnum)
         {
             foreach (ShapeStruct shapeStruct in shapeStructList)
             {
@@ -77,7 +95,8 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
 
             StopAllCoroutines();
             _mazeGrid = new MazeCell[0, 0];
-
+            totalMazeCellList.Clear();
+            
             for (int i = mazeCellContainer.childCount - 1; i >= 0; i--)
             {
                 Destroy(mazeCellContainer.GetChild(i).gameObject);
@@ -92,7 +111,7 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
 
             CreateGrid();
 
-            OnGridCreationComplete?.Invoke();
+            GameEventHandler.MazeCreationStarted();
 
             MazeCell prevCell = null;
 
@@ -119,7 +138,7 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
 
             yield return GenerateMaze(prevCell, _mazeGrid[startingMazeCell.x, startingMazeCell.y]);
         }
-
+        
         private void CreateGrid()
         {
             MazeCell currMazeScript = GetShapeScriptFromMazeShape(currMazeShape);
@@ -133,11 +152,32 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
                         Quaternion.identity,
                         mazeCellContainer);
                     _mazeGrid[x, z].mazeCellId = new Vector2Int(x, z);
+                    totalMazeCellList.Add(_mazeGrid[x, z]);
+                    currMazeScript.gameObject.name = $"Cell_{x}_{z}";
                 }
             }
+            
+            GameEventHandler.GridCreationCompleted();
         }
 
+        private void MazeCreationCompleted()
+        {
+            isMazeCompleted = true;
+        }
 
+        bool IsAllCellVisited()
+        {
+            foreach (MazeCell cell in totalMazeCellList)
+            {
+                if (!cell.IsVisited)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        
         IEnumerator GenerateMaze(MazeCell prevCell, MazeCell currCell)
         {
             currCell.Visited();
@@ -157,9 +197,13 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
                 }
             } while (nextCell != null);
 
-
-            //Calls When The Whole Maze is Ready
-            OnCompleteMazeEvent?.Invoke();
+            
+            if (IsAllCellVisited() && !isMazeCompleted)
+            {
+                //Calls When The Whole Maze is Ready
+                Debug.Log("Maze Creation Completed !");
+                GameEventHandler.MazeCreationCompleted();
+            }
         }
 
         void ClearWalls(MazeCell prevCell, MazeCell currCell)
@@ -170,42 +214,34 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
             //Moving From Left to Right
             if (prevCell.mazeCellId.x < currCell.mazeCellId.x)
             {
-                prevCell.ClearRightWall();
-                currCell.ClearLeftWall();
+                prevCell.RightWallStatus(false);
+                currCell.LeftWallStatus(false);
                 return;
             }
 
             //Moving From Right to Left
             if (prevCell.mazeCellId.x > currCell.mazeCellId.x)
             {
-                prevCell.ClearLeftWall();
-                currCell.ClearRightWall();
+                prevCell.LeftWallStatus(false);
+                currCell.RightWallStatus(false);
                 return;
             }
 
             //Moving From Front to Back
             if (prevCell.mazeCellId.y > currCell.mazeCellId.y)
             {
-                prevCell.ClearBackWall();
-                currCell.ClearFrontWall();
+                prevCell.BackWallStatus(false);
+                currCell.FrontWallStatus(false);
                 return;
             }
 
             //Moving From Back to Front
             if (prevCell.mazeCellId.y < currCell.mazeCellId.y)
             {
-                prevCell.ClearFrontWall();
-                currCell.ClearBackWall();
+                prevCell.FrontWallStatus(false);
+                currCell.BackWallStatus(false);
                 return;
             }
-
-            //Moving From TopLeft to TopRight
-            // if (prevCell.mazeCellId.y < currCell.mazeCellId.y)
-            // {
-            //     prevCell.ClearFrontWall();
-            //     currCell.ClearBackWall();
-            //     return;
-            // }
         }
 
         MazeCell GetNextUnVisitedMazeCell(MazeCell currCell)
@@ -281,8 +317,5 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
                 new Vector3(camPos.x / childCount, max * 2 + camYOffset, camPos.z / childCount);
         }
 
-        void MazeCompleted()
-        {
-        }
     }
 }

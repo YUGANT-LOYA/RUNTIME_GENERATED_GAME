@@ -441,11 +441,11 @@ MonoBehaviour:
   rightWall: {fileID: 1543907736230913056}
   frontWall: {fileID: 1543907736114233737}
   backWall: {fileID: 1543907735735347916}
-  topLeftWall: {fileID: 0}
-  topRightWall: {fileID: 0}
-  bottomLeftWall: {fileID: 0}
-  bottomRightWall: {fileID: 0}
   unVisitedCell: {fileID: 1543907736258018292}
+  isLeftWallPlaced: 1
+  isRightWallPlaced: 1
+  isFrontWallPlaced: 1
+  isBackWallPlaced: 1
 --- !u!1 &1543907736230913056
 GameObject:
   m_ObjectHideFlags: 0

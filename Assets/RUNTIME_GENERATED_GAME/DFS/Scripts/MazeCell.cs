@@ -1,3 +1,4 @@
+using System.Text;
 using UnityEngine;
 
 namespace YugantLoyaLibrary.MazeGenerator.DFS
@@ -10,14 +11,10 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
             rightWall,
             frontWall,
             backWall,
-            topLeftWall,
-            topRightWall,
-            bottomLeftWall,
-            bottomRightWall,
             unVisitedCell;
 
         public bool IsVisited { get; private set; }
-
+        public bool isLeftWallPlaced = true, isRightWallPlaced = true, isFrontWallPlaced = true, isBackWallPlaced = true;
 
         public void Visited()
         {
@@ -25,44 +22,44 @@ namespace YugantLoyaLibrary.MazeGenerator.DFS
             unVisitedCell.SetActive(false);
         }
 
-        public void ClearLeftWall()
+        //Pattern in which the cell data is saved in Json.
+        public string GetCellDataForJsonSaving()
         {
-            leftWall.SetActive(false);
+            // "CellID" : "{IsLeftWallThere}{IsRightWallThere}{IsFrontWallThere}{IsBackWallThere}" 
+            StringBuilder jsonStr = new StringBuilder();
+
+            jsonStr.Append(isLeftWallPlaced ? "1" : "0");
+            jsonStr.Append(isRightWallPlaced ? "1" : "0");
+            jsonStr.Append(isFrontWallPlaced ? "1" : "0");
+            jsonStr.Append(isBackWallPlaced ? "1" : "0");
+
+            Debug.Log($"Json Cell ID : {mazeCellId} , Data : {jsonStr} ");
+
+            return jsonStr.ToString();
+        }
+        
+        public void LeftWallStatus(bool isActive)
+        {
+            leftWall.SetActive(isActive);
+            isLeftWallPlaced = isActive;
         }
 
-        public void ClearRightWall()
+        public void RightWallStatus(bool isActive)
         {
-            rightWall.SetActive(false);
+            rightWall.SetActive(isActive);
+            isRightWallPlaced = isActive;
         }
 
-        public void ClearFrontWall()
+        public void FrontWallStatus(bool isActive)
         {
-            frontWall.SetActive(false);
+            frontWall.SetActive(isActive);
+            isFrontWallPlaced = isActive;
         }
 
-        public void ClearBackWall()
+        public void BackWallStatus(bool isActive)
         {
-            backWall.SetActive(false);
-        }
-
-        public void ClearTopLeftWall()
-        {
-            topLeftWall.SetActive(false);
-        }
-
-        public void ClearTopRightWall()
-        {
-            topRightWall.SetActive(false);
-        }
-
-        public void ClearBottomLeftWall()
-        {
-            bottomLeftWall.SetActive(false);
-        }
-
-        public void ClearBottomRightWall()
-        {
-            bottomRightWall.SetActive(false);
+            backWall.SetActive(isActive);
+            isBackWallPlaced = isActive;
         }
     }
 }

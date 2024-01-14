@@ -247,8 +247,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 139109682}
-  - component: {fileID: 139109683}
   - component: {fileID: 139109684}
+  - component: {fileID: 139109683}
   m_Layer: 0
   m_Name: Maze Generator
   m_TagString: Untagged
@@ -284,25 +284,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isMazeCompleted: 0
+  mazeNum: 1
+  boolLoadingMazeFile: 1
+  mazeJsonFile: {fileID: 4900000, guid: d387d6c08b1a4de43baa5db2fa9918b0, type: 3}
   shapeStructList:
   - shape: 0
-    shapeScript: {fileID: 1543907736216892429, guid: 4d5e28cbddcb6c144a64f4df038f5770,
+    shapeScript: {fileID: 2922832560518420798, guid: 49685d4442b88924bb00ce06714af2da,
       type: 3}
-    shapeObj: {fileID: 1543907736216892419, guid: 4d5e28cbddcb6c144a64f4df038f5770,
-      type: 3}
-  - shape: 1
-    shapeScript: {fileID: 1543907736216892429, guid: 2f91ebc2ce8e72249839c87f4655fdc3,
-      type: 3}
-    shapeObj: {fileID: 1543907736216892419, guid: 2f91ebc2ce8e72249839c87f4655fdc3,
+    shapeObj: {fileID: 2922832560518420784, guid: 49685d4442b88924bb00ce06714af2da,
       type: 3}
   mazeCellContainer: {fileID: 1458732545}
   currMazeShape: 0
   camYOffset: 2
   timeToFindNextCell: 0.02
-  mazeWidth: 10
-  mazeDepth: 10
+  mazeWidth: 5
+  mazeDepth: 5
   shouldStartRandomly: 1
   startingMazeCell: {x: 0, y: 0}
+  isPlayerLocationAssigned: 0
+  isTargetLocationAssigned: 0
+  playerLocation: {x: 0, y: 0}
+  targetLocation: {x: 0, y: 0}
   totalMazeCellList: []
 --- !u!114 &139109684
 MonoBehaviour:
@@ -318,9 +320,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   saveMazeButton: {fileID: 1945962570}
   mazeCellList: []
-  mazeDataStruct:
-    cellId: {x: 0, y: 0}
-    cellWallInfo: 
+  mazeDataStructList: []
 --- !u!1 &472825067
 GameObject:
   m_ObjectHideFlags: 0
@@ -1377,20 +1377,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1945962571}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 139109684}
-        m_TargetAssemblyTypeName: YugantLoyaLibrary.MazeGenerator.DFS.LoadSaveMazeSystem,
-          Assembly-CSharp
-        m_MethodName: SaveIntoJson
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1945962571
 MonoBehaviour:
   m_ObjectHideFlags: 0
